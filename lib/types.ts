@@ -18,16 +18,17 @@ export interface Player {
   isCurrentTurn: boolean
 }
 
-export interface Move {
-  playerId: string
-  score: number
+interface MoveHistory {
+  playerId: string;
+  score: number;
+  words: string[];
   tiles: {
-    letter: string
+    letter: string;
     position: {
-      row: number
-      col: number
-    }
-  }[]
+      row: number;
+      col: number;
+    };
+  }[];
 }
 
 export interface GameState {
@@ -35,5 +36,5 @@ export interface GameState {
   players: Player[]
   currentPlayerId: string | null
   letterBag: { letter: string; value: number }[]
-  moveHistory: Move[]
+  moveHistory: MoveHistory[];
 }
