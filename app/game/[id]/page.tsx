@@ -432,3 +432,94 @@ export default function GamePage({ params }: { params: { id: string } }) {
     </div>
   )}
 }
+async function validateMove(gameState: GameState, placedTiles: { row: number; col: number; tile: Tile }[]) {
+  // Ensure placed tiles are contiguous and form valid words
+  const rows = placedTiles.map((pt) => pt.row);
+  const cols = placedTiles.map((pt) => pt.col);
+
+  const isSingleRow = rows.every((row) => row === rows[0]);
+  const isSingleCol = cols.every((col) => col === cols[0]);
+
+  if (!isSingleRow && !isSingleCol) {
+    return { isValid: false, score: 0, words: [] };
+  }
+
+  // Check for gaps in the placement
+  const sortedTiles = isSingleRow
+    ? placedTiles.sort((a, b) => a.col - b.col)
+    : placedTiles.sort((a, b) => a.row - b.row);
+
+  for (let i = 1; i < sortedTiles.length; i++) {
+    const prev = sortedTiles[i - 1];
+    const curr = sortedTiles[i];
+    if (isSingleRow && curr.col !== prev.col + 1) {
+      return { isValid: false, score: 0, words: [] };
+    }
+    if (isSingleCol && curr.row !== prev.row + 1) {
+      return { isValid: false, score: 0, words: [] };
+    }
+  }
+
+  // Form words and calculate score
+  const words: string[] = [];
+  let score = 0;
+
+  for (const { row, col, tile } of placedTiles) {
+    // Horizontal word
+    let word = tile.letter;
+    let wordScore = tile.value;
+
+    // Extend left
+    for (let c = col - 1; c >= 0 && gameState.board[row][c].tile; c--) {
+      word = gameState.board[row][c].tile!.letter + word;
+      wordScore += gameState.board[row][c].tile!.value;
+    }
+
+    // Extend right
+    for (let c = col + 1; c < gameState.board[row].length && gameState.board[row][c].tile; c++) {
+      word += gameState.board[row][c].tile!.letter;
+      wordScore += gameState.board[row][c].tile!.value;
+    }
+
+    if (word.length > 1) {
+      words.push(word);
+      score += wordScore;
+    }
+
+    // Vertical word
+    word = tile.letter;
+    wordScore = tile.value;
+
+    // Extend up
+    for (let r = row - 1; r >= 0 && gameState.board[r][col].tile; r--) {
+      word = gameState.board[r][col].tile!.letter + word;
+      wordScore += gameState.board[r][col].tile!.value;
+    }
+
+    // Extend down
+    for (let r = row + 1; r < gameState.board.length && gameState.board[r][col].tile; r++) {
+      word += gameState.board[r][col].tile!.letter;
+      wordScore += gameState.board[r][col].tile!.value;
+    }
+
+    if (word.length > 1) {
+      words.push(word);
+      score += wordScore;
+    }
+  }
+
+  // Validate words using a dictionary API or predefined word list
+  const isValid = await Promise.all(
+    words.map(async (word) => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_DICTIONARY_API_URL}?word=${word}`);
+      const data = await response.json();
+      return data.isValid;
+    })
+  );
+
+  if (isValid.includes(false)) {
+    return { isValid: false, score: 0, words: [] };
+  }
+
+  return { isValid: true, score, words };
+}
