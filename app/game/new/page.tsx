@@ -17,22 +17,26 @@ export default function NewGamePage() {
 
     setIsCreating(true)
 
-    try {
-      // In a real implementation, we would create a game on the server
-      // and get back a game ID
-      const gameId = Math.random().toString(36).substring(2, 8).toUpperCase()
-
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Navigate to the game with the generated ID
-      router.push(`/game/${gameId}?name=${encodeURIComponent(playerName)}`)
-    } catch (error) {
-      console.error("Failed to create game:", error)
-      setIsCreating(false)
-    }
-  }
-
+    fetch('/api/games/join', {
+      method: 'POST', // Correct method
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ gameId: '12345', playerName: 'JohnDoe' }), // Example payload
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Game joined successfully:', data);
+      })
+      .catch((error) => {
+        console.error('Failed to join game:', error);
+      });
+      
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-amber-50">
       <Card className="w-full max-w-md">
