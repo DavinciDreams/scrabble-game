@@ -18,7 +18,7 @@ export default function NewGamePage() {
     setIsCreating(true)
 
     fetch('/api/games/join', {
-      method: 'POST', // Correct method
+      method: 'GET', // Correct method
       headers: {
         'Content-Type': 'application/json',
       },
@@ -36,7 +36,7 @@ export default function NewGamePage() {
       .catch((error) => {
         console.error('Failed to join game:', error);
       });
-      
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-amber-50">
       <Card className="w-full max-w-md">
